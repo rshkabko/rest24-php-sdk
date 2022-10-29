@@ -1,27 +1,10 @@
-bitrix24-php-sdk [![Build Status](https://travis-ci.org/mesilov/bitrix24-php-sdk.svg?branch=master)](https://travis-ci.org/mesilov/bitrix24-php-sdk)
+Bitrix24 REST API SDK
 ================
-[![License](https://poser.pugx.org/mesilov/bitrix24-php-sdk/license.svg)](https://packagist.org/packages/mesilov/bitrix24-php-sdk) [![Total Downloads](https://poser.pugx.org/mesilov/bitrix24-php-sdk/downloads.svg)](https://packagist.org/packages/mesilov/bitrix24-php-sdk)
 
-A powerfull PHP library for the Bitrix24 REST API
-
-[Bitrix24 API documentation - Russian](http://dev.1c-bitrix.ru/rest_help/)<br />
-[Bitrix24 API documentation - English](https://training.bitrix24.com/rest_help/)
-## Promo code for new Bitrix24 accounts 
-- `b24io5gb` — add 5GB on your Bitrix24
-- `b24iousers`  — add 12 users on your Bitrix24  
-[Register new Bitrix24 account](https://www.bitrix24.ru/create.php?p=255670)
-
-Bitrix24-PHP-SDK has a two branches
-- 1.x with 5.x php support, bugfix and minor updates only
-- 2.x only with 7.3+ php support, active work 
-
-Current master is 1.x branch
-
-## Requirements
-- php: >=5.3.2
-- ext-json: *
-- ext-curl: *
-- Monolog: optional 
+## Installation ##
+```bash
+composer require flamix/bitrix24-php-sdk
+```
 
 ## Example ##
 ``` php
@@ -50,21 +33,3 @@ $obB24App->setRefreshToken($arParams['REFRESH_ID']);
 $obB24User = new \Bitrix24\User\User($obB24App);
 $arCurrentB24User = $obB24User->current();
 ```
-## Installation ##
-Add `"mesilov/bitrix24-php-sdk": "dev-master"` to `composer.json` of your application. Or clone repo to your project.
-
-## Submitting bugs and feature requests
-
-Bugs and feature request are tracked on [GitHub](https://github.com/mesilov/bitrix24-php-sdk/issues)
-
-## License
-
-bitrix24-php-sdk is licensed under the MIT License - see the `MIT-LICENSE.txt` file for details
-
-## Author
-
-Maxim Mesilov - <mesilov.maxim@gmail.com> - <https://twitter.com/mesilov><br />
-See also the list of [contributors](https://github.com/mesilov/bitrix24-php-sdk/graphs/contributors) which participated in this project.
-
-## Need custom Bitrix24 application? ##
-email: <mesilov.maxim@gmail.com>
