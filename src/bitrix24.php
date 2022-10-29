@@ -660,8 +660,13 @@ class Bitrix24 implements iBitrix24
             /**
              * @todo add function json_last_error_msg()
              */
-            $errorMsg = 'fatal error in function json_decode.' . PHP_EOL . 'Error code: ' . $jsonErrorCode . PHP_EOL;
+            $errorMsg = 'Fatal error in function json_decode.' . PHP_EOL . 'Error code: ' . $jsonErrorCode . PHP_EOL . 'URL: ' . $url;
             $this->log->error($errorMsg, $this->getErrorContext());
+
+            // TODO: If more - use switch
+            if($jsonErrorCode == 4)
+                throw new Bitrix24BadJsonResponseException($errorMsg);
+
             throw new Bitrix24Exception($errorMsg);
         }
 
