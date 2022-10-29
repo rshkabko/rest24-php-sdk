@@ -7,12 +7,12 @@
     "license": "MIT",
     "authors": [
         {
-            "name": "Maxim Mesilov",
-            "homepage": "https://github.com/mesilov/"
-        },
-        {
             "name": "Shkabko Roman",
             "homepage": "https://github.com/rshkabko/"
+        },
+        {
+            "name": "Maxim Mesilov",
+            "homepage": "https://github.com/mesilov/"
         }
     ],
     "require": {
