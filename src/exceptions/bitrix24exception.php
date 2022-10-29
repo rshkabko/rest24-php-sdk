@@ -16,6 +16,7 @@ namespace Bitrix24\Exceptions;
  * 		\Bitrix24Exception — base class
  * 			\Bitrix24IoException — I/O network errors
  * 			    \Bitrix24EmptyResponseException — empty response from Bitrix24 portal
+ * 			    \Bitrix24BadJsonResponseException — bad JSON from Bitrix24 portal
  * 			\Bitrix24ApiException — API level errors
  * 				\Bitrix24WrongClientException — Wrong client or application will be deleted from portal
  * 				\Bitrix24MethodNotFoundException — API-method not found

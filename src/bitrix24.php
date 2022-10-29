@@ -12,6 +12,7 @@ namespace Bitrix24;
 
 use Bitrix24\Contracts\iBitrix24;
 use Bitrix24\Exceptions\Bitrix24ApiException;
+use Bitrix24\Exceptions\Bitrix24BadJsonResponseException;
 use Bitrix24\Exceptions\Bitrix24BadGatewayException;
 use Bitrix24\Exceptions\Bitrix24EmptyResponseException;
 use Bitrix24\Exceptions\Bitrix24Exception;
@@ -171,8 +172,8 @@ class Bitrix24 implements iBitrix24
     /**
      * Create a object to work with Bitrix24 REST API service
      *
-     * @param bool                 $isSaveRawResponse - if true raw response from bitrix24 will be available from method getRawResponse, this is debug mode
-     * @param null|LoggerInterface $obLogger          - instance of \Monolog\Logger
+     * @param bool $isSaveRawResponse - if true raw response from bitrix24 will be available from method getRawResponse, this is debug mode
+     * @param null|LoggerInterface $obLogger - instance of \Monolog\Logger
      *
      * @return Bitrix24
      * @throws Bitrix24Exception
@@ -521,7 +522,7 @@ class Bitrix24 implements iBitrix24
      * Execute a request API to Bitrix24 using cURL
      *
      * @param string $url
-     * @param array  $additionalParameters
+     * @param array $additionalParameters
      *
      * @return array
      * @throws Bitrix24PortalDeletedException
@@ -546,14 +547,14 @@ class Bitrix24 implements iBitrix24
         $curlOptions = [
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_RETURNTRANSFER => true,
-            CURLINFO_HEADER_OUT    => true,
-            CURLOPT_VERBOSE        => true,
+            CURLINFO_HEADER_OUT => true,
+            CURLOPT_VERBOSE => true,
             CURLOPT_CONNECTTIMEOUT => 65,
-            CURLOPT_TIMEOUT        => 70,
-            CURLOPT_USERAGENT      => strtolower(__CLASS__ . '-PHP-SDK/v' . self::VERSION),
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => http_build_query($additionalParameters),
-            CURLOPT_URL            => $url,
+            CURLOPT_TIMEOUT => 70,
+            CURLOPT_USERAGENT => strtolower(__CLASS__ . '-PHP-SDK/v' . self::VERSION),
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => http_build_query($additionalParameters),
+            CURLOPT_URL => $url,
         ];
 
         if (!$this->sslVerify) {
@@ -676,19 +677,19 @@ class Bitrix24 implements iBitrix24
     {
         return [
             // portal specific settings
-            'B24_DOMAIN'         => $this->getDomain(),
-            'B24_MEMBER_ID'      => $this->getMemberId(),
-            'B24_ACCESS_TOKEN'   => $this->getAccessToken(),
-            'B24_REFRESH_TOKEN'  => $this->getRefreshToken(),
+            'B24_DOMAIN' => $this->getDomain(),
+            'B24_MEMBER_ID' => $this->getMemberId(),
+            'B24_ACCESS_TOKEN' => $this->getAccessToken(),
+            'B24_REFRESH_TOKEN' => $this->getRefreshToken(),
             // application settings
-            'APPLICATION_SCOPE'  => $this->getApplicationScope(),
-            'APPLICATION_ID'     => $this->getApplicationId(),
+            'APPLICATION_SCOPE' => $this->getApplicationScope(),
+            'APPLICATION_ID' => $this->getApplicationId(),
             'APPLICATION_SECRET' => $this->getApplicationSecret(),
-            'REDIRECT_URI'       => $this->getRedirectUri(),
+            'REDIRECT_URI' => $this->getRedirectUri(),
             // network
-            'RAW_REQUEST'        => $this->getRawRequest(),
-            'CURL_REQUEST_INFO'  => $this->getRequestInfo(),
-            'RAW_RESPONSE'       => $this->getRawResponse(),
+            'RAW_REQUEST' => $this->getRawRequest(),
+            'CURL_REQUEST_INFO' => $this->getRequestInfo(),
+            'RAW_RESPONSE' => $this->getRawResponse(),
         ];
     }
 
@@ -835,7 +836,8 @@ class Bitrix24 implements iBitrix24
         $arRequestResult,
         $methodName,
         array $additionalParameters = []
-    ) {
+    )
+    {
         if (array_key_exists('error', $arRequestResult)) {
             $errorMsg = sprintf(
                 '%s - %s in call [%s] for domain [%s]',
@@ -980,7 +982,7 @@ class Bitrix24 implements iBitrix24
      * Get list of all methods available for current application
      *
      * @param array | null $applicationScope
-     * @param bool         $isFull
+     * @param bool $isFull
      *
      * @return array
      *
@@ -1083,8 +1085,8 @@ class Bitrix24 implements iBitrix24
     /**
      * Add call to batch. If [[$callback]] parameter is set, it will receive call result as first parameter.
      *
-     * @param string        $method
-     * @param array         $parameters
+     * @param string $method
+     * @param array $parameters
      * @param callable|null $callback
      *
      * @return string Unique call ID.
@@ -1093,9 +1095,9 @@ class Bitrix24 implements iBitrix24
     {
         $id = uniqid('', true);
         $this->_batch[$id] = [
-            'method'     => $method,
+            'method' => $method,
             'parameters' => $parameters,
-            'callback'   => $callback,
+            'callback' => $callback,
         ];
 
         return $id;
@@ -1114,7 +1116,7 @@ class Bitrix24 implements iBitrix24
     /**
      * Process batch calls.
      *
-     * @param int $halt  Halt batch on error
+     * @param int $halt Halt batch on error
      * @param int $delay Delay between batch calls (in msec)
      *
      * @throws Bitrix24Exception
@@ -1147,9 +1149,9 @@ class Bitrix24 implements iBitrix24
 
                 call_user_func($call['callback'], [
                     'result' => isset($results['result'][$idx]) ? $results['result'][$idx] : null,
-                    'error'  => isset($results['result_error'][$idx]) ? $results['result_error'][$idx] : null,
-                    'total'  => isset($results['result_total'][$idx]) ? $results['result_total'][$idx] : null,
-                    'next'   => isset($results['result_next'][$idx]) ? $results['result_next'][$idx] : null,
+                    'error' => isset($results['result_error'][$idx]) ? $results['result_error'][$idx] : null,
+                    'total' => isset($results['result_total'][$idx]) ? $results['result_total'][$idx] : null,
+                    'next' => isset($results['result_next'][$idx]) ? $results['result_next'][$idx] : null,
                 ]);
             }
             if (count($this->_batch) && $delay) {
@@ -1163,7 +1165,7 @@ class Bitrix24 implements iBitrix24
      * Execute Bitrix24 REST API method
      *
      * @param string $methodName
-     * @param array  $additionalParameters
+     * @param array $additionalParameters
      *
      * @return mixed
      * @throws \Bitrix24\Exceptions\Bitrix24WrongClientException
@@ -1209,7 +1211,7 @@ class Bitrix24 implements iBitrix24
      * Execute Bitrix24 REST API method
      *
      * @param string $methodName
-     * @param array  $additionalParameters
+     * @param array $additionalParameters
      *
      * @return array
      * @throws Bitrix24Exception
@@ -1250,8 +1252,8 @@ class Bitrix24 implements iBitrix24
 
         // execute request
         $this->log->info('call bitrix24 method', [
-            'BITRIX24_DOMAIN'   => $this->domain,
-            'METHOD_NAME'       => $methodName,
+            'BITRIX24_DOMAIN' => $this->domain,
+            'METHOD_NAME' => $methodName,
             'METHOD_PARAMETERS' => $additionalParameters,
         ]);
         $requestResult = $this->executeRequest($url, $additionalParameters);
@@ -1291,11 +1293,16 @@ class Bitrix24 implements iBitrix24
                      * @todo add function json_last_error_msg()
                      */
                     $errorMsg = 'fatal error in function json_decode.' . PHP_EOL . 'Error code: ' . $jsonErrorCode . PHP_EOL;
+
+                    // TODO: If more - use switch
+                    if($jsonErrorCode == 4)
+                        throw new Bitrix24BadJsonResponseException($errorMsg);
+
                     throw new Bitrix24Exception($errorMsg);
                 }
                 // merge dirty and clear data
                 unset($arClearData['state']);
-                $requestResult ['result'] = array_merge($requestResult ['result'], $arClearData);
+                $requestResult['result'] = array_merge($requestResult['result'], $arClearData);
             } else {
                 throw new Bitrix24SecurityException('security signature in api-response not found');
             }
@@ -1357,7 +1364,7 @@ class Bitrix24 implements iBitrix24
      * Execute Bitrix24 REST API method using webhook
      *
      * @param string $methodName
-     * @param array  $additionalParameters
+     * @param array $additionalParameters
      *
      * @return array
      * @throws Bitrix24Exception
@@ -1395,9 +1402,9 @@ class Bitrix24 implements iBitrix24
         // execute request
         $this->log->info('call bitrix24 method', [
             'BITRIX24_WEBHOOK_URL' => $url,
-            'BITRIX24_DOMAIN'      => $this->domain,
-            'METHOD_NAME'          => $methodName,
-            'METHOD_PARAMETERS'    => $additionalParameters,
+            'BITRIX24_DOMAIN' => $this->domain,
+            'METHOD_NAME' => $methodName,
+            'METHOD_PARAMETERS' => $additionalParameters,
         ]);
         $requestResult = $this->executeRequest($url, $additionalParameters);
 
