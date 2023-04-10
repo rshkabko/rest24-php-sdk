@@ -256,13 +256,12 @@ class Bitrix24 implements iBitrix24
      *
      * @param array $options - array(CURLOPT_XXX => value1, CURLOPT_XXX2 => value2,...)
      *
-     * @return bool
+     * @return self
      */
-    public function setCustomCurlOptions($options)
+    public function setCustomCurlOptions($options): self
     {
         $this->customCurlOptions = $options;
-
-        return true;
+        return $this;
     }
 
     /**
