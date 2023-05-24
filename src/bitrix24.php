@@ -1164,6 +1164,37 @@ class Bitrix24 implements iBitrix24
         }
         $this->log->info('bitrix24PhpSdk.processBatchCalls.finish');
     }
+    
+    /**
+     *  Call Raw Batch request.
+     *
+     *  Example:
+     *  $batch = [
+     *      'step_0' => ['method' => 'crm.lead.list', 'params' => ['select' => ['ID', 'NAME'], 'filter' => ['>=ID' => 0]],
+     *      'step_1' => ['method' => 'crm.lead.list', 'params' => ['select' => ['ID', 'NAME'], 'filter' => ['>=ID' => $result[step_0][49][ID]]],
+     *  ];
+     *
+     * @param array $batch
+     * @param $halt
+     * @return array|mixed
+     * @throws Exception
+     */
+    public function rawBatch(array $batch, $halt = 0)
+    {
+        if (count($batch) > 50) {
+            throw new \Exception('Max batch call 50, you add ' . count($batch));
+        }
+
+        foreach ($batch as $cmd) {
+            if (!isset($cmd['method'])) {
+                throw new \Exception('Batch mast have method and params array!');
+            }
+
+            $commands = $cmd['method'] . '?' . http_build_query($cmd['params'] ?? []);
+        }
+
+        return $this->call('batch', ['halt' => $halt, 'cmd' => $commands]);
+    }
 
     /**
      * Execute Bitrix24 REST API method
