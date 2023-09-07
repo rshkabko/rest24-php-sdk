@@ -1,9 +1,9 @@
 {
-    "name": "flamix/bitrix24-php-sdk",
-    "description": "A powerfull PHP library for the Bitrix24 REST API",
+    "name": "flamix/app24-rest-php-sdk",
+    "description": "Rest24 API SDK",
     "keywords": ["Bitrix24", "PHP", "REST", "API"],
     "type": "library",
-    "homepage": "https://github.com/rshkabko/bitrix24-php-sdk",
+    "homepage": "https://github.com/rshkabko/app24-rest-php-sdk",
     "license": "MIT",
     "authors": [
         {
