@@ -1,5 +1,5 @@
 {
-    "name": "flamix/app24-rest-php-sdk",
+    "name": "flamix/rest24-php-sdk",
     "description": "Rest24 API SDK",
     "keywords": ["Bitrix24", "PHP", "REST", "API"],
     "type": "library",
