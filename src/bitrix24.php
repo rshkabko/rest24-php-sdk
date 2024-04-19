@@ -157,7 +157,7 @@ class Bitrix24 implements iBitrix24
     /**
      * @var bool ssl verify for checking CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST
      */
-    protected $sslVerify = true;
+    protected $sslVerify = false;
 
     /**
      * @var bool if true - webhook will be used in API calls (without access_token)
