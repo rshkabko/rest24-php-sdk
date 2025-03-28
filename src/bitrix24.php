@@ -562,21 +562,11 @@ class Bitrix24 implements iBitrix24
         }
         
         /*if (strpos($url, 'bitrix24.ru') !== false) {
-            $parsedUrl = parse_url($url);
-            $host = $parsedUrl['host'] ?? '';
-
-            if (!empty($host)) {
-                $curlOptions[CURLOPT_RESOLVE] = ["$host:443:178.132.201.53"];
-            }
+            $curlOptions[CURLOPT_RESOLVE] = ["{$this->getDomain()}:443:178.132.201.53"];
         }
         
         if (strpos($url, 'bitrix24.kz') !== false) {
-            $parsedUrl = parse_url($url);
-            $host = $parsedUrl['host'] ?? '';
-    
-            if (!empty($host)) {
-                $curlOptions[CURLOPT_RESOLVE] = ["$host:443:195.49.210.56"];
-            }
+            $curlOptions[CURLOPT_RESOLVE] = ["{$this->getDomain()}:443:195.49.210.56"];
         }*/
 
         if (is_array($this->customCurlOptions)) {
@@ -598,7 +588,8 @@ class Bitrix24 implements iBitrix24
             if (false === $curlResult) {
                 $curlErrorNumber = curl_errno($curl);
                 $errorMsg = sprintf(
-                    'in try[%s] cURL error (code %s): %s' . PHP_EOL,
+                    '[%s] in try[%s] cURL error (code %s): %s' . PHP_EOL,
+                    $this->getDomain(),
                     $retriesCnt,
                     $curlErrorNumber,
                     curl_error($curl)
@@ -623,7 +614,7 @@ class Bitrix24 implements iBitrix24
         // handling URI level resource errors
         switch ($this->requestInfo['http_code']) {
             case 403:
-                $errorMsg = sprintf('portal [%s] deleted, query aborted', $this->getDomain());
+                $errorMsg = sprintf('403 error! Maybe portal [%s] deleted, query aborted!', $this->getDomain());
                 $this->log->error($errorMsg, $this->getErrorContext());
                 throw new Bitrix24PortalDeletedException($errorMsg);
             case 302:
