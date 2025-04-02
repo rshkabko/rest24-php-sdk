@@ -200,7 +200,7 @@ class Bitrix24 implements iBitrix24
              */
             $this->log = new NullLogger();
         }
-        $this->setRetriesToConnectCount(1);
+        $this->setRetriesToConnectCount(2);
         $this->setRetriesToConnectTimeout(1000000);
     }
 
