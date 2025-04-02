@@ -1,364 +1,93 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Mesilov
- * Date: 23.01.2016
- * Time: 1:47
- */
 
 namespace Bitrix24\Contracts;
 
-use Bitrix24\Bitrix24;
-use Bitrix24\Exceptions\Bitrix24Exception;
-use Bitrix24\Exceptions\Bitrix24IoException;
-use Bitrix24\Exceptions\Bitrix24PaymentRequiredException;
-use Bitrix24\Exceptions\Bitrix24EmptyResponseException;
-use Bitrix24\Exceptions\Bitrix24ApiException;
-use Bitrix24\Exceptions\Bitrix24PortalRenamedException;
-use Bitrix24\Exceptions\Bitrix24TokenIsInvalidException;
-use Bitrix24\Exceptions\Bitrix24WrongClientException;
-use Bitrix24\Exceptions\Bitrix24MethodNotFoundException;
-use Bitrix24\Exceptions\Bitrix24TokenIsExpiredException;
-use Bitrix24\Exceptions\Bitrix24PortalDeletedException;
-use Bitrix24\Exceptions\Bitrix24SecurityException;
-
-
-use Psr\Log\LoggerInterface;
-
-/**
- * Interface iBitrix24
- * @package Bitrix24
- */
 interface iBitrix24
 {
-    /**
-     * Max calls in one batch
-     */
-    const MAX_BATCH_CALLS = 50;
+    // Authorization and tokens
+    public function setApplicationId(string $applicationId);
 
-    /**
-     * Default delay between batch calls (in msec)
-     */
-    const BATCH_DELAY = 500000;
+    public function getApplicationId(): string;
 
-    /**
-     * Create a object to work with Bitrix24 REST API service
-     * @param bool $isSaveRawResponse - if true raw response from bitrix24 will be available from method getRawResponse, this is debug mode
-     * @param null|LoggerInterface $obLogger - instance of \Monolog\Logger
-     * @throws Bitrix24Exception
-     * @return Bitrix24
-     */
-    public function __construct($isSaveRawResponse = false, LoggerInterface $obLogger = null);
+    public function setApplicationSecret(string $applicationSecret);
 
-    /**
-     * Get a random string to sign protected api-call. Use salt for argument "state" in secure api-call
-     * random string is a result of mt_rand function
-     * @return int
-     */
-    public function getSecuritySignSalt();
+    public function getApplicationSecret(): string;
 
-    /**
-     * Set member ID — portal GUID
-     * @param string $memberId
-     * @throws Bitrix24Exception
-     * @return true;
-     */
-    public function setMemberId($memberId);
+    public function setRedirectUri(string $redirectUri);
 
-    /**
-     * Get memeber ID
-     * @return string | null
-     */
-    public function getMemberId();
+    public function getRedirectUri(): ?string;
 
-    /**
-     * Set redirect URI
-     * @param string $redirectUri
-     * @throws Bitrix24Exception
-     * @return true;
-     */
-    public function setRedirectUri($redirectUri);
+    public function setDomain(string $domain);
 
-    /**
-     * Get redirect URI
-     * @return string | null
-     */
-    public function getRedirectUri();
+    public function getDomain(): ?string;
 
-    /**
-     * Set access token
-     * @param string $accessToken
-     * @throws Bitrix24Exception
-     * @return true;
-     */
-    public function setAccessToken($accessToken);
+    public function setAccessToken(string $accessToken);
 
-    /**
-     * Get access token
-     * @return string | null
-     */
-    public function getAccessToken();
+    public function getAccessToken(): ?string;
 
-    /**
-     * Set refresh token
-     * @param $refreshToken
-     * @throws Bitrix24Exception
-     * @return true;
-     */
-    public function setRefreshToken($refreshToken);
+    public function setRefreshToken(string $refreshToken);
 
-    /**
-     * Get refresh token
-     * @return string
-     */
-    public function getRefreshToken();
+    public function getRefreshToken(): string;
 
-    /**
-     * Set domain
-     * @param $domain
-     * @throws Bitrix24Exception
-     * @return true;
-     */
-    public function setDomain($domain);
-
-    /**
-     * Get domain
-     * @return string | null
-     */
-    public function getDomain();
-
-    /**
-     * Set application scope
-     * @param array $applicationScope
-     * @return boolean
-     * @throws Bitrix24Exception
-     */
     public function setApplicationScope(array $applicationScope);
 
-    /**
-     * Get application scope
-     */
-    public function getApplicationScope();
+    public function getApplicationScope(): array;
 
-    /**
-     * Set application id
-     * @param string $applicationId
-     * @throws Bitrix24Exception
-     * @return true;
-     */
-    public function setApplicationId($applicationId);
+    public function setMemberId(string $memberId);
 
-    /**
-     * Get application id
-     * @return string
-     */
-    public function getApplicationId();
+    public function getMemberId(): ?string;
 
-    /**
-     * Set application secret
-     * @param string $applicationSecret
-     * @throws Bitrix24Exception
-     * @return true;
-     */
-    public function setApplicationSecret($applicationSecret);
+    public function getFirstAccessToken(string $code): array;
 
-    /**
-     * Get application secret
-     * @return string
-     */
-    public function getApplicationSecret();
+    public function getNewAccessToken(): array;
 
-    /**
-     * Set custom cURL options, overriding default ones
-     * @link http://php.net/manual/en/function.curl-setopt.php
-     * @param array $options - array(CURLOPT_XXX => value1, CURLOPT_XXX2 => value2,...)
-     * @return bool
-     */
-    public function setCustomCurlOptions($options);
+    public function isAccessTokenExpire(): bool;
 
-    /**
-     * Return raw request, contain all cURL options array and API query. Data available after you try to call method call
-     * numbers of array keys is const of cURL module. Example: CURLOPT_RETURNTRANSFER = 19913
-     * @return array | null
-     */
-    public function getRawRequest();
+    // API calls
+    public function call(string $methodName, array $additionalParameters = []);
 
-    /**
-     * Return result from function curl_getinfo. Data available after you try to call method call
-     * @return array | null
-     */
-    public function getRequestInfo();
-
-    /**
-     * Return additional parameters of last api-call. Data available after you try to call method call
-     * @return array | null
-     */
     public function getMethodParameters();
 
-    /**
-     * Execute Bitrix24 REST API method
-     *
-     * @param string $methodName
-     * @param array $additionalParameters
-     *
-     * @throws Bitrix24Exception
-     * @throws Bitrix24ApiException
-     * @throws Bitrix24TokenIsInvalidException
-     * @throws Bitrix24TokenIsExpiredException
-     * @throws Bitrix24WrongClientException
-     * @throws Bitrix24MethodNotFoundException
-     * @throws Bitrix24PaymentRequiredException
-     * @throws Bitrix24SecurityException
-     * @throws Bitrix24PortalDeletedException
-     * @throws Bitrix24PortalRenamedException
-     * @throws Bitrix24IoException
-     * @throws Bitrix24EmptyResponseException
-     *
-     * @return array
-     */
-    public function call($methodName, array $additionalParameters = array());
+    // Batch requests
+    public function addBatchCall(string $method, array $parameters = [], callable $callback = null);
 
-    /**
-     * Get raw response from Bitrix24 before json_decode call, method available only in debug mode.
-     * To activate debug mode you must before set to true flag isSaveRawResponse in class construct
-     * @throws Bitrix24Exception
-     * @return string
-     */
-    public function getRawResponse();
+    public function hasBatchCalls(): bool;
 
-    /**
-     * Get new access token
-     *
-     * @return array
-     *
-     * @throws Bitrix24Exception
-     * @throws Bitrix24ApiException
-     * @throws Bitrix24PortalDeletedException
-     * @throws Bitrix24PortalRenamedException
-     * @throws Bitrix24IoException
-     * @throws Bitrix24EmptyResponseException
-     * @throws Bitrix24TokenIsInvalidException
-     * @throws Bitrix24TokenIsExpiredException
-     * @throws Bitrix24WrongClientException
-     * @throws Bitrix24MethodNotFoundException
-     * @throws Bitrix24PaymentRequiredException
-     *
-     */
-    public function getNewAccessToken();
+    public function processBatchCalls(int $halt = 0, int $delay = 0);
 
-    /**
-     * Authorize and get first access token
-     *
-     * @param $code
-     *
-     * @return array
-     *
-     * @throws Bitrix24Exception
-     * @throws Bitrix24ApiException
-     * @throws Bitrix24PortalDeletedException
-     * @throws Bitrix24PortalRenamedException
-     * @throws Bitrix24IoException
-     * @throws Bitrix24EmptyResponseException
-     * @throws Bitrix24TokenIsInvalidException
-     * @throws Bitrix24TokenIsExpiredException
-     * @throws Bitrix24WrongClientException
-     * @throws Bitrix24MethodNotFoundException
-     * @throws Bitrix24PaymentRequiredException
-     *
-     */
-    public function getFirstAccessToken($code);
+    public function rawBatch(array $batch, int $halt = 0);
 
-    /**
-     * Check is access token expire, call list of all available api-methods from B24 portal with current access token
-     * if we have an error code expired_token then return true else return false
-     *
-     * @throws Bitrix24Exception
-     * @throws Bitrix24ApiException
-     * @throws Bitrix24PortalDeletedException
-     * @throws Bitrix24PortalRenamedException
-     * @throws Bitrix24IoException
-     * @throws Bitrix24EmptyResponseException
-     * @throws Bitrix24TokenIsInvalidException
-     * @throws Bitrix24TokenIsExpiredException
-     * @throws Bitrix24WrongClientException
-     * @throws Bitrix24MethodNotFoundException
-     * @throws Bitrix24PaymentRequiredException
-     *
-     * @return boolean
-     */
-    public function isAccessTokenExpire();
+    // Webhook mode
+    public function setWebhookUsage(bool $webhookUsage);
 
-    /**
-     * Get list of all methods available for current application
-     * @param array | null $applicationScope
-     * @param bool $isFull
-     * @return array
-     * @throws Bitrix24Exception
-     */
-    public function getAvailableMethods(array $applicationScope = array(), $isFull = false);
+    public function getWebhookUsage(): bool;
 
-    /**
-     * get list of scope for current application from bitrix24 api
-     * @param bool $isFull
-     * @throws Bitrix24Exception
-     * @return array
-     */
-    public function getScope($isFull = false);
+    public function setWebhookSecret(string $webhookSecret);
 
-    /**
-     * set CURL request count retries
-     * @param $retriesCnt
-     * @return boolean
-     */
-    public function setRetriesToConnectCount($retriesCnt = 1);
+    public function getWebhookSecret(): ?string;
 
-    /**
-     * set retries to connect timeout in microseconds
-     * @param $microseconds
-     * @return boolean
-     */
-    public function setRetriesToConnectTimeout($microseconds = 1000000);
+    // Event callbacks
+    public function setOnExpiredToken(callable $callback);
 
-    /**
-     * get CURL request count retries
-     * @return int
-     */
-    public function getRetriesToConnectCount();
+    public function setOnPortalRenamed(callable $callback);
 
-    /**
-     * get retries to connect timeout in microseconds
-     * @return mixed
-     */
+    public function setOnCallApiMethod(callable $callback);
+
+    // Retry and debug
+    public function setRetriesToConnectCount(int $retriesCnt): self;
+
+    public function getRetriesToConnectCount(): int;
+
+    public function setRetriesToConnectTimeout(int $microseconds);
+
     public function getRetriesToConnectTimeout();
 
-    /**
-     * Add call to batch. If [[$callback]] parameter is set, it will receive call result as first parameter.
-     *
-     * @param string $method
-     * @param array $parameters
-     * @param callable|null $callback
-     *
-     * @return string Unique call ID.
-     */
-    public function addBatchCall($method, array $parameters = array(), callable $callback = null);
+    public function setCustomCurlOptions(array $options): self;
 
-    /**
-     * Process batch calls.
-     *
-     * @param int $halt Halt batch on error
-     * @param int $delay Delay between batch calls (in msec)
-     *
-     * @throws Bitrix24Exception
-     * @throws Bitrix24SecurityException
-     * @throws \Bitrix24\Exceptions\Bitrix24ApiException
-     * @throws \Bitrix24\Exceptions\Bitrix24TokenIsExpiredException
-     */
-    public function processBatchCalls($halt = 0, $delay = self::BATCH_DELAY);
+    // Request info
+    public function getRawRequest();
 
-    /**
-     * Return true, if we have unprocessed batch calls.
-     *
-     * @return bool
-     */
-    public function hasBatchCalls();
+    public function getRequestInfo();
+
+    public function getRawResponse();
 }

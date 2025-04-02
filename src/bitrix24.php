@@ -33,6 +33,16 @@ class Bitrix24 implements iBitrix24
     const VERSION = '1.2.3';
 
     /**
+     * @var int max batch calls
+     */
+    const MAX_BATCH_CALLS = 50;
+
+    /**
+     * @var int batch delay in microseconds
+     */
+    const BATCH_DELAY = 500000;
+
+    /**
      * @var string oAuth server
      */
     protected string $oauthServer = 'oauth.bitrix.info';
@@ -151,7 +161,7 @@ class Bitrix24 implements iBitrix24
     /**
      * @var bool if true - webhook will be used in API calls (without access_token)
      */
-    protected bool $webhook_usage;
+    protected bool $webhook_usage = false;
 
     /**
      * @var string webhook secret identifier
@@ -230,7 +240,7 @@ class Bitrix24 implements iBitrix24
      *
      * @return self
      */
-    public function setCustomCurlOptions($options): self
+    public function setCustomCurlOptions(array $options): self
     {
         $this->customCurlOptions = $options;
         return $this;
@@ -266,7 +276,7 @@ class Bitrix24 implements iBitrix24
      *
      * @throws Exception
      */
-    public function getNewAccessToken()
+    public function getNewAccessToken(): array
     {
         $applicationId = $this->getApplicationId();
         $applicationSecret = $this->getApplicationSecret();
@@ -315,18 +325,12 @@ class Bitrix24 implements iBitrix24
      *
      * @param  string  $applicationId
      *
-     * @return true;
-     * @throws Bitrix24Exception
-     *
+     * @return self
      */
-    public function setApplicationId($applicationId)
+    public function setApplicationId(string $applicationId): self
     {
-        if ('' === $applicationId) {
-            throw new Bitrix24Exception('application id is empty');
-        }
         $this->applicationId = $applicationId;
-
-        return true;
+        return $this;
     }
 
     /**
@@ -334,7 +338,7 @@ class Bitrix24 implements iBitrix24
      *
      * @return string
      */
-    public function getApplicationSecret()
+    public function getApplicationSecret(): string
     {
         return $this->applicationSecret;
     }
@@ -344,18 +348,13 @@ class Bitrix24 implements iBitrix24
      *
      * @param  string  $applicationSecret
      *
-     * @return true;
-     * @throws Bitrix24Exception
+     * @return self
      *
      */
-    public function setApplicationSecret($applicationSecret)
+    public function setApplicationSecret(string $applicationSecret): self
     {
-        if ('' === $applicationSecret) {
-            throw new Bitrix24Exception('application secret is empty');
-        }
         $this->applicationSecret = $applicationSecret;
-
-        return true;
+        return $this;
     }
 
     /**
@@ -363,7 +362,7 @@ class Bitrix24 implements iBitrix24
      *
      * @return string
      */
-    public function getRefreshToken()
+    public function getRefreshToken(): string
     {
         return $this->refreshToken;
     }
@@ -373,26 +372,21 @@ class Bitrix24 implements iBitrix24
      *
      * @param $refreshToken
      *
-     * @return true;
-     * @throws Bitrix24Exception
+     * @return self
      *
      */
-    public function setRefreshToken($refreshToken)
+    public function setRefreshToken(string $refreshToken): self
     {
-        if ('' === $refreshToken) {
-            throw new Bitrix24Exception('refresh token is empty');
-        }
         $this->refreshToken = $refreshToken;
-
-        return true;
+        return $this;
     }
 
     /**
      * Get application scope
      *
-     * @return string
+     * @return array
      */
-    public function getApplicationScope()
+    public function getApplicationScope(): array
     {
         return $this->applicationScope;
     }
@@ -422,9 +416,9 @@ class Bitrix24 implements iBitrix24
      *
      * @return string | null
      */
-    public function getRedirectUri()
+    public function getRedirectUri(): ?string
     {
-        return $this->redirectUri;
+        return $this->redirectUri ?? null;
     }
 
     /**
@@ -432,28 +426,23 @@ class Bitrix24 implements iBitrix24
      *
      * @param  string  $redirectUri
      *
-     * @return true;
-     * @throws Bitrix24Exception
+     * @return self
      *
      */
-    public function setRedirectUri($redirectUri)
+    public function setRedirectUri(string $redirectUri): self
     {
-        if ('' === $redirectUri) {
-            throw new Bitrix24Exception('redirect URI is empty');
-        }
         $this->redirectUri = $redirectUri;
-
-        return true;
-    }// end of SetApplicationId
+        return $this;
+    }
 
     /**
      * Get domain
      *
      * @return string | null
      */
-    public function getDomain()
+    public function getDomain(): ?string
     {
-        return $this->domain;
+        return $this->domain ?? null;
     }
 
     /**
@@ -461,22 +450,17 @@ class Bitrix24 implements iBitrix24
      *
      * @param $domain
      *
-     * @return true;
-     * @throws Bitrix24Exception
+     * @return self
      *
      */
-    public function setDomain($domain)
+    public function setDomain(string $domain): self
     {
-        if ('' === $domain) {
-            throw new Bitrix24Exception('domain is empty');
-        }
         $this->domain = $domain;
-
-        return true;
+        return $this;
     }
 
     /**
-     * disable of checking CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST
+     * Disable of checking CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST
      */
     public function setDisabledSslVerify()
     {
@@ -484,7 +468,7 @@ class Bitrix24 implements iBitrix24
     }
 
     /**
-     * enable of checking CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST
+     * Enable of checking CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST
      */
     public function setEnabledSslVerify()
     {
@@ -498,12 +482,7 @@ class Bitrix24 implements iBitrix24
      * @param  array  $additionalParameters
      *
      * @return array
-     * @throws Bitrix24PortalDeletedException
-     * @throws Bitrix24IoException
-     * @throws Bitrix24EmptyResponseException
-     *
-     * @throws Bitrix24Exception
-     * @throws \Bitrix24\Exceptions\Bitrix24BadGatewayException
+     * @throws Exception
      */
     protected function executeRequest($url, array $additionalParameters = [])
     {
@@ -543,7 +522,7 @@ class Bitrix24 implements iBitrix24
             $curlOptions[CURLOPT_RESOLVE] = ["{$this->getDomain()}:443:195.49.210.56"];
         }*/
 
-        if (is_array($this->customCurlOptions)) {
+        if (!empty($this->customCurlOptions)) {
             foreach ($this->customCurlOptions as $customCurlOptionKey => $customCurlOptionValue) {
                 $curlOptions[$customCurlOptionKey] = $customCurlOptionValue;
             }
@@ -688,7 +667,7 @@ class Bitrix24 implements iBitrix24
      */
     public function getMemberId(): ?string
     {
-        return $this->memberId;
+        return $this->memberId ?? null;
     }
 
     /**
@@ -697,8 +676,6 @@ class Bitrix24 implements iBitrix24
      * @param  string  $memberId
      *
      * @return self
-     * @throws Exception
-     *
      */
     public function setMemberId(string $memberId): self
     {
@@ -713,7 +690,7 @@ class Bitrix24 implements iBitrix24
      */
     public function getAccessToken(): ?string
     {
-        return $this->accessToken;
+        return $this->accessToken ?? null;
     }
 
     /**
@@ -722,7 +699,6 @@ class Bitrix24 implements iBitrix24
      * @param  string  $accessToken
      *
      * @return self
-     * @throws Bitrix24Exception
      *
      */
     public function setAccessToken(string $accessToken): self
@@ -737,9 +713,9 @@ class Bitrix24 implements iBitrix24
      *
      * @return array | null
      */
-    public function getRawRequest()
+    public function getRawRequest(): ?array
     {
-        return $this->rawRequest;
+        return $this->rawRequest ?? null;
     }
 
     /**
@@ -747,9 +723,9 @@ class Bitrix24 implements iBitrix24
      *
      * @return array | null
      */
-    public function getRequestInfo()
+    public function getRequestInfo(): ?array
     {
-        return $this->requestInfo;
+        return $this->requestInfo ?? null;
     }
 
     /**
@@ -758,9 +734,9 @@ class Bitrix24 implements iBitrix24
      *
      * @return string | null
      */
-    public function getRawResponse()
+    public function getRawResponse(): ?string
     {
-        return $this->rawResponse;
+        return $this->rawResponse ?? null;
     }
 
     /**
@@ -778,18 +754,13 @@ class Bitrix24 implements iBitrix24
      *
      * @param  int  $microseconds
      *
-     * @return bool
-     * @throws Bitrix24Exception
+     * @return self
      */
-    public function setRetriesToConnectTimeout($microseconds = 1000000)
+    public function setRetriesToConnectTimeout(int $microseconds = 1000000): self
     {
         $this->log->debug(sprintf('set retries to connect count %s', $microseconds));
-        if (!is_numeric($microseconds)) {
-            throw new Bitrix24Exception('retries to connect count must be an integer');
-        }
         $this->retriesToConnectTimeout = $microseconds;
-
-        return true;
+        return $this;
     }
 
     /**
@@ -864,7 +835,7 @@ class Bitrix24 implements iBitrix24
      *
      * @throws Exception
      */
-    public function getFirstAccessToken($code)
+    public function getFirstAccessToken($code): array
     {
         $applicationId = $this->getApplicationId();
         $applicationSecret = $this->getApplicationSecret();
@@ -902,7 +873,7 @@ class Bitrix24 implements iBitrix24
      * @throws Exception
      *
      */
-    public function isAccessTokenExpire()
+    public function isAccessTokenExpire(): bool
     {
         $isTokenExpire = false;
         $accessToken = $this->getAccessToken();
@@ -938,7 +909,7 @@ class Bitrix24 implements iBitrix24
      *
      * @throws Exception
      */
-    public function getAvailableMethods(array $applicationScope = [], $isFull = false)
+    public function getAvailableMethods(array $applicationScope = [], bool $isFull = false)
     {
         $accessToken = $this->getAccessToken();
         $domain = $this->getDomain();
@@ -949,17 +920,21 @@ class Bitrix24 implements iBitrix24
             throw new Bitrix24Exception('application id not found, you must call setAccessToken method before');
         }
 
-        $showAll = '';
+        $url = "https://{$domain}/rest/methods.json?auth={$accessToken}";
+
         if (true === $isFull) {
-            $showAll = '&full=true';
+            $url .= '&full=true';
         }
-        $scope = '';
+
         if (null === $applicationScope) {
             $scope = '&scope';
         } elseif (count(array_unique($applicationScope)) > 0) {
             $scope = '&scope='.implode(',', array_map('urlencode', array_unique($applicationScope)));
         }
-        $url = 'https://'.$domain.'/rest/methods.json?auth='.$accessToken.$showAll.$scope;
+
+        if ($scope ?? null) {
+            $url .= $scope;
+        }
 
         return $this->executeRequest($url);
     }
@@ -970,13 +945,7 @@ class Bitrix24 implements iBitrix24
      * @param  bool  $isFull
      *
      * @return array
-     * @throws Bitrix24Exception
-     * @throws Bitrix24PortalDeletedException
-     * @throws Bitrix24PortalRenamedException
-     * @throws Bitrix24IoException
-     * @throws Bitrix24EmptyResponseException
-     *
-     * @throws Bitrix24Exception
+     * @throws Exception
      */
     public function getScope($isFull = false)
     {
@@ -988,11 +957,11 @@ class Bitrix24 implements iBitrix24
         } elseif (null === $accessToken) {
             throw new Bitrix24Exception('application id not found, you must call setAccessToken method before');
         }
-        $showAll = '';
+
+        $url = "https://{$domain}/rest/scope.json?auth={$accessToken}";
         if (true === $isFull) {
-            $showAll = '&full=true';
+            $url .= '&full=true';
         }
-        $url = 'https://'.$domain.'/rest/scope.json?auth='.$accessToken.$showAll;
 
         return $this->executeRequest($url);
     }
@@ -1002,7 +971,7 @@ class Bitrix24 implements iBitrix24
      *
      * @return int
      */
-    public function getRetriesToConnectCount()
+    public function getRetriesToConnectCount(): int
     {
         return $this->retriesToConnectCount;
     }
@@ -1013,8 +982,6 @@ class Bitrix24 implements iBitrix24
      * @param $retriesCnt
      *
      * @return self
-     *
-     * @throws  Exception
      */
     public function setRetriesToConnectCount(int $retriesCnt = 1): self
     {
@@ -1049,7 +1016,7 @@ class Bitrix24 implements iBitrix24
      *
      * @return bool
      */
-    public function hasBatchCalls()
+    public function hasBatchCalls(): bool
     {
         return (bool) count($this->_batch);
     }
@@ -1262,13 +1229,12 @@ class Bitrix24 implements iBitrix24
      *
      * @param  bool  $webhook_usage_boolean
      *
-     * @return bool
+     * @return self
      */
-    public function setWebhookUsage($webhook_usage_boolean)
+    public function setWebhookUsage(bool $webhook_usage_boolean): self
     {
         $this->webhook_usage = $webhook_usage_boolean;
-
-        return true;
+        return $this;
     }
 
     /**
@@ -1276,7 +1242,7 @@ class Bitrix24 implements iBitrix24
      *
      * @return bool
      */
-    public function getWebhookUsage()
+    public function getWebhookUsage(): bool
     {
         return $this->webhook_usage;
     }
@@ -1298,11 +1264,11 @@ class Bitrix24 implements iBitrix24
     /**
      * Return string with webhook secret
      *
-     * @return string
+     * @return null | string
      */
-    public function getWebhookSecret()
+    public function getWebhookSecret(): ?string
     {
-        return $this->webhook_secret;
+        return $this->webhook_secret ?? null;
     }
 
     /**
