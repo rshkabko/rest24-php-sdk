@@ -4,6 +4,8 @@ namespace Bitrix24;
 
 use Exception;
 use Bitrix24\Contracts\iBitrix24;
+use Bitrix24\Traits\Webhook;
+use Bitrix24\Traits\Batch;
 use Bitrix24\Exceptions\{
     Bitrix24ApiException,
     Bitrix24BadJsonResponseException,
@@ -27,20 +29,12 @@ use Psr\Log\NullLogger;
 
 class Bitrix24 implements iBitrix24
 {
+    use Webhook, Batch;
+
     /**
      * @var string SDK version
      */
     const VERSION = '1.2.3';
-
-    /**
-     * @var int max batch calls
-     */
-    const MAX_BATCH_CALLS = 50;
-
-    /**
-     * @var int batch delay in microseconds
-     */
-    const BATCH_DELAY = 500000;
 
     /**
      * @var string oAuth server
@@ -135,11 +129,6 @@ class Bitrix24 implements iBitrix24
     protected int $retriesToConnectTimeout;
 
     /**
-     * @var array pending batch calls
-     */
-    protected array $_batch = [];
-
-    /**
      * @var callable callback for expired tokens
      */
     protected $_onExpiredToken;
@@ -157,16 +146,6 @@ class Bitrix24 implements iBitrix24
      * @var bool ssl verify for checking CURLOPT_SSL_VERIFYPEER and CURLOPT_SSL_VERIFYHOST
      */
     protected bool $sslVerify = false;
-
-    /**
-     * @var bool if true - webhook will be used in API calls (without access_token)
-     */
-    protected bool $webhook_usage = false;
-
-    /**
-     * @var string webhook secret identifier
-     */
-    protected string $webhook_secret;
 
     /**
      * Create a object to work with Bitrix24 REST API service
@@ -991,113 +970,6 @@ class Bitrix24 implements iBitrix24
     }
 
     /**
-     * Add call to batch. If [[$callback]] parameter is set, it will receive call result as first parameter.
-     *
-     * @param  string  $method
-     * @param  array  $parameters
-     * @param  callable|null  $callback
-     *
-     * @return string Unique call ID.
-     */
-    public function addBatchCall($method, array $parameters = [], callable $callback = null)
-    {
-        $id = uniqid('', true);
-        $this->_batch[$id] = [
-            'method' => $method,
-            'parameters' => $parameters,
-            'callback' => $callback,
-        ];
-
-        return $id;
-    }
-
-    /**
-     * Return true, if we have unprocessed batch calls.
-     *
-     * @return bool
-     */
-    public function hasBatchCalls(): bool
-    {
-        return (bool) count($this->_batch);
-    }
-
-    /**
-     * Process batch calls.
-     *
-     * @param  int  $halt  Halt batch on error
-     * @param  int  $delay  Delay between batch calls (in msec)
-     *
-     * @throws Exception
-     */
-    public function processBatchCalls($halt = 0, $delay = self::BATCH_DELAY)
-    {
-        $this->log->info('Bitrix24PhpSdk.processBatchCalls.start', ['batch_query_delay' => $delay]);
-        $batchQueryCounter = 0;
-        while (count($this->_batch)) {
-            $batchQueryCounter++;
-            $slice = array_splice($this->_batch, 0, self::MAX_BATCH_CALLS);
-            $this->log->info('bitrix24PhpSdk.processBatchCalls.callItem', [
-                'batch_query_number' => $batchQueryCounter,
-            ]);
-
-            $commands = [];
-            foreach ($slice as $idx => $call) {
-                $commands[$idx] = $call['method'].'?'.http_build_query($call['parameters']);
-            }
-
-            $batchResult = $this->call('batch', ['halt' => $halt, 'cmd' => $commands]);
-            $results = $batchResult['result'];
-            foreach ($slice as $idx => $call) {
-                if (!isset($call['callback']) || !is_callable($call['callback'])) {
-                    continue;
-                }
-
-                call_user_func($call['callback'], [
-                    'result' => isset($results['result'][$idx]) ? $results['result'][$idx] : null,
-                    'error' => isset($results['result_error'][$idx]) ? $results['result_error'][$idx] : null,
-                    'total' => isset($results['result_total'][$idx]) ? $results['result_total'][$idx] : null,
-                    'next' => isset($results['result_next'][$idx]) ? $results['result_next'][$idx] : null,
-                ]);
-            }
-            if (count($this->_batch) && $delay) {
-                usleep($delay);
-            }
-        }
-        $this->log->info('bitrix24PhpSdk.processBatchCalls.finish');
-    }
-
-    /**
-     *  Call Raw Batch request.
-     *
-     *  Example:
-     *  $batch = [
-     *      'step_0' => ['method' => 'crm.lead.list', 'params' => ['select' => ['ID', 'NAME'], 'filter' => ['>=ID' => 0]],
-     *      'step_1' => ['method' => 'crm.lead.list', 'params' => ['select' => ['ID', 'NAME'], 'filter' => ['>=ID' => $result[step_0][49][ID]]],
-     *  ];
-     *
-     * @param  array  $batch
-     * @param $halt
-     * @return array|mixed
-     * @throws Exception
-     */
-    public function rawBatch(array $batch, $halt = 0)
-    {
-        if (count($batch) > 50) {
-            throw new Exception('Max batch call 50, you add '.count($batch));
-        }
-
-        foreach ($batch as $cmd) {
-            if (!isset($cmd['method'])) {
-                throw new Exception('Batch mast have method and params array!');
-            }
-
-            $commands = $cmd['method'].'?'.http_build_query($cmd['params'] ?? []);
-        }
-
-        return $this->call('batch', ['halt' => $halt, 'cmd' => $commands]);
-    }
-
-    /**
      * Execute Bitrix24 REST API method
      *
      * @param  string  $methodName
@@ -1219,93 +1091,6 @@ class Bitrix24 implements iBitrix24
                 throw new Bitrix24SecurityException('security signature in api-response not found');
             }
         }
-
-        return $requestResult;
-    }
-
-    /**
-     * Set whether we using webhook or application in API calls
-     * If true - use webhook in API call
-     *
-     * @param  bool  $webhook_usage_boolean
-     *
-     * @return self
-     */
-    public function setWebhookUsage(bool $webhook_usage_boolean): self
-    {
-        $this->webhook_usage = $webhook_usage_boolean;
-        return $this;
-    }
-
-    /**
-     * Return whether we using webhook or application in API calls
-     *
-     * @return bool
-     */
-    public function getWebhookUsage(): bool
-    {
-        return $this->webhook_usage;
-    }
-
-    /**
-     * Set webhook secret to use in API calls
-     *
-     * @param  string  $webhook_secret
-     *
-     * @return bool
-     */
-    public function setWebhookSecret($webhook_secret)
-    {
-        $this->webhook_secret = $webhook_secret;
-
-        return true;
-    }
-
-    /**
-     * Return string with webhook secret
-     *
-     * @return null | string
-     */
-    public function getWebhookSecret(): ?string
-    {
-        return $this->webhook_secret ?? null;
-    }
-
-    /**
-     * Execute Bitrix24 REST API method using webhook
-     *
-     * @param  string  $methodName
-     * @param  array  $additionalParameters
-     *
-     * @return array
-     * @throws Exception
-     */
-    protected function _call_webhook(string $methodName, array $additionalParameters = [])
-    {
-        if (null === $this->getDomain()) {
-            throw new Bitrix24Exception('domain not found, you must call setDomain method before');
-        }
-
-        if (null === $this->getWebhookSecret()) {
-            throw new Bitrix24Exception('no webhook secret provided, you must call setWebhookSecret method before');
-        }
-
-        $url = 'https://'.$this->domain.'/rest/'.$this->getWebhookSecret().'/'.$methodName;
-
-        // save method parameters for debug
-        $this->methodParameters = $additionalParameters;
-
-        // execute request
-        $this->log->info('call bitrix24 method', [
-            'BITRIX24_WEBHOOK_URL' => $url,
-            'BITRIX24_DOMAIN' => $this->domain,
-            'METHOD_NAME' => $methodName,
-            'METHOD_PARAMETERS' => $additionalParameters,
-        ]);
-        $requestResult = $this->executeRequest($url, $additionalParameters);
-
-        // check errors and throw exception if errors exists
-        $this->handleBitrix24APILevelErrors($requestResult, $methodName, $additionalParameters);
 
         return $requestResult;
     }
