@@ -38,4 +38,32 @@ trait Proxy
 
         return $this;
     }
+
+    /**
+     * When we need to set proxy to domain zone or domain.
+     *
+     * Ex: setProxyToDomainZone(['domain.com' => 'proxy:port', 'com' => 'proxy:port']);
+     *
+     * @param  array|null  $zones
+     * @return \Bitrix24\Bitrix24|Proxy
+     */
+    public function setProxyToDomainZone(?array $zones = null): self
+    {
+        if (is_null($zones) || empty($zones)) {
+            return $this;
+        }
+
+        // Mayby for domain?
+        if (isset($zones[$this->getDomain()])) {
+            $this->setProxy($zones[$this->getDomain()]);
+            return $this;
+        }
+
+        $parts = explode('.', $this->getDomain());
+        if (isset($zones[end($parts)])) {
+            $this->setProxy($zones[end($parts)]);
+        }
+
+        return $this;
+    }
 }
