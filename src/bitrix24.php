@@ -6,6 +6,7 @@ use Exception;
 use Bitrix24\Contracts\iBitrix24;
 use Bitrix24\Traits\Webhook;
 use Bitrix24\Traits\Batch;
+use Bitrix24\Traits\Proxy;
 use Bitrix24\Exceptions\{
     Bitrix24ApiException,
     Bitrix24BadJsonResponseException,
@@ -29,7 +30,7 @@ use Psr\Log\NullLogger;
 
 class Bitrix24 implements iBitrix24
 {
-    use Webhook, Batch;
+    use Webhook, Batch, Proxy;
 
     /**
      * @var string SDK version
@@ -161,7 +162,7 @@ class Bitrix24 implements iBitrix24
     {
         $this->isSaveRawResponse = $isSaveRawResponse;
         $this->log = is_null($obLogger) ? new NullLogger() : clone $obLogger;
-        $this->setRetriesToConnectCount(2);
+        $this->setRetriesToConnectCount(1);
         $this->setRetriesToConnectTimeout(1000000);
     }
 
@@ -491,6 +492,10 @@ class Bitrix24 implements iBitrix24
         if (!$this->sslVerify) {
             $curlOptions[CURLOPT_SSL_VERIFYPEER] = 0;
             $curlOptions[CURLOPT_SSL_VERIFYHOST] = 0;
+        }
+
+        if ($this->getProxy()) {
+            $curlOptions[CURLOPT_PROXY] = $this->getProxy();
         }
 
         /*if (strpos($url, 'bitrix24.ru') !== false) {

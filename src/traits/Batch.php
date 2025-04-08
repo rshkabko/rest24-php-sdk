@@ -9,12 +9,7 @@ trait Batch
     /**
      * @var int max batch calls
      */
-    const MAX_BATCH_CALLS = 50;
-
-    /**
-     * @var int batch delay in microseconds
-     */
-    const BATCH_DELAY = 500000;
+    public int $max_batch_calls = 50;
 
     /**
      * @var array pending batch calls
@@ -60,13 +55,13 @@ trait Batch
      *
      * @throws Exception
      */
-    public function processBatchCalls($halt = 0, $delay = self::BATCH_DELAY)
+    public function processBatchCalls($halt = 0, $delay = 500000)
     {
         $this->log->info('Bitrix24PhpSdk.processBatchCalls.start', ['batch_query_delay' => $delay]);
         $batchQueryCounter = 0;
         while (count($this->_batch)) {
             $batchQueryCounter++;
-            $slice = array_splice($this->_batch, 0, self::MAX_BATCH_CALLS);
+            $slice = array_splice($this->_batch, 0, $this->max_batch_calls);
             $this->log->info('bitrix24PhpSdk.processBatchCalls.callItem', [
                 'batch_query_number' => $batchQueryCounter,
             ]);
@@ -113,8 +108,8 @@ trait Batch
      */
     public function rawBatch(array $batch, $halt = 0)
     {
-        if (count($batch) > self::MAX_BATCH_CALLS) {
-            throw new Exception('Max batch call 50, you add '.count($batch));
+        if (count($batch) > $this->max_batch_calls) {
+            throw new Exception("Max batch call {$this->max_batch_calls}, you add ".count($batch));
         }
 
         foreach ($batch as $cmd) {
