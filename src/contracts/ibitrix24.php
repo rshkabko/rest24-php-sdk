@@ -29,10 +29,6 @@ interface iBitrix24
 
     public function getRefreshToken(): string;
 
-    public function setApplicationScope(array $applicationScope);
-
-    public function getApplicationScope(): array;
-
     public function setMemberId(string $memberId);
 
     public function getMemberId(): ?string;
