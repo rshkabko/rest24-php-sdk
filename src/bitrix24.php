@@ -58,12 +58,6 @@ class Bitrix24 implements iBitrix24
     protected string $domain;
 
     /**
-     * @var array scope
-     */
-    // TODO: Delete
-    protected $applicationScope = [];
-
-    /**
      * @var string application id
      */
     protected string $applicationId;
@@ -261,7 +255,6 @@ class Bitrix24 implements iBitrix24
         $applicationId = $this->getApplicationId();
         $applicationSecret = $this->getApplicationSecret();
         $refreshToken = $this->getRefreshToken();
-        $applicationScope = $this->getApplicationScope();
         $redirectUri = $this->getRedirectUri();
 
         if (null === $applicationId) {
@@ -270,8 +263,6 @@ class Bitrix24 implements iBitrix24
             throw new Bitrix24Exception('application id not found, you must call setApplicationSecret method before');
         } elseif (null === $refreshToken) {
             throw new Bitrix24Exception('application id not found, you must call setRefreshToken method before');
-        } elseif (0 === count($applicationScope)) {
-            throw new Bitrix24Exception('application scope not found, you must call setApplicationScope method before');
         } elseif (null === $redirectUri) {
             throw new Bitrix24Exception('application redirect URI not found, you must call setRedirectUri method before');
         }
@@ -359,36 +350,6 @@ class Bitrix24 implements iBitrix24
     {
         $this->refreshToken = $refreshToken;
         return $this;
-    }
-
-    /**
-     * Get application scope
-     *
-     * @return array
-     */
-    public function getApplicationScope(): array
-    {
-        return $this->applicationScope;
-    }
-
-    /**
-     * Set application scope
-     *
-     * @param  array  $applicationScope
-     *
-     * @return boolean
-     *
-     * @throws Bitrix24Exception
-     */
-    public function setApplicationScope(array $applicationScope)
-    {
-        if (is_array($applicationScope) && count($applicationScope) > 0) {
-            $this->applicationScope = $applicationScope;
-
-            return true;
-        } else {
-            throw new Bitrix24Exception('application scope not set');
-        }
     }
 
     /**
@@ -633,7 +594,6 @@ class Bitrix24 implements iBitrix24
             'B24_ACCESS_TOKEN' => $this->getAccessToken(),
             'B24_REFRESH_TOKEN' => $this->getRefreshToken(),
             // application settings
-            'APPLICATION_SCOPE' => $this->getApplicationScope(),
             'APPLICATION_ID' => $this->getApplicationId(),
             'APPLICATION_SECRET' => $this->getApplicationSecret(),
             'REDIRECT_URI' => $this->getRedirectUri(),
@@ -823,15 +783,12 @@ class Bitrix24 implements iBitrix24
     {
         $applicationId = $this->getApplicationId();
         $applicationSecret = $this->getApplicationSecret();
-        $applicationScope = $this->getApplicationScope();
         $redirectUri = $this->getRedirectUri();
 
         if (null === $applicationId) {
             throw new Bitrix24Exception('application id not found, you must call setApplicationId method before');
         } elseif (null === $applicationSecret) {
             throw new Bitrix24Exception('application id not found, you must call setApplicationSecret method before');
-        } elseif (0 === count($applicationScope)) {
-            throw new Bitrix24Exception('application scope not found, you must call setApplicationScope method before');
         } elseif (null === $redirectUri) {
             throw new Bitrix24Exception('application redirect URI not found, you must call setRedirectUri method before');
         }
