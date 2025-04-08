@@ -156,7 +156,7 @@ class Bitrix24 implements iBitrix24
     {
         $this->isSaveRawResponse = $isSaveRawResponse;
         $this->log = is_null($obLogger) ? new NullLogger() : clone $obLogger;
-        $this->setRetriesToConnectCount(1);
+        $this->setRetriesToConnectCount(2);
         $this->setRetriesToConnectTimeout(1000000);
     }
 
@@ -267,11 +267,12 @@ class Bitrix24 implements iBitrix24
             throw new Bitrix24Exception('application redirect URI not found, you must call setRedirectUri method before');
         }
 
-        $url = "https://{$this->oauthServer}/oauth/token/"
-            .'?grant_type=refresh_token'
-            .'&client_id='.urlencode($applicationId)
-            .'&client_secret='.$applicationSecret
-            .'&refresh_token='.$refreshToken;
+        $url = "https://{$this->oauthServer}/oauth/token/?".http_build_query([
+                'grant_type' => 'refresh_token',
+                'client_id' => $applicationId,
+                'client_secret' => $applicationSecret,
+                'refresh_token' => $refreshToken,
+            ]);
 
         $requestResult = $this->executeRequest($url);
 
@@ -442,7 +443,7 @@ class Bitrix24 implements iBitrix24
             CURLOPT_RETURNTRANSFER => true,
             CURLINFO_HEADER_OUT => true,
             CURLOPT_VERBOSE => true,
-            CURLOPT_CONNECTTIMEOUT => 10,
+            CURLOPT_CONNECTTIMEOUT => 9,
             CURLOPT_TIMEOUT => 55,
             CURLOPT_USERAGENT => strtolower(__CLASS__.'-PHP-SDK/v'.self::VERSION),
             CURLOPT_POST => true,
@@ -793,11 +794,12 @@ class Bitrix24 implements iBitrix24
             throw new Bitrix24Exception('application redirect URI not found, you must call setRedirectUri method before');
         }
 
-        $url = "https://{$this->oauthServer}/oauth/token/"
-            .'?grant_type=authorization_code'
-            .'&client_id='.urlencode($applicationId)
-            .'&client_secret='.$applicationSecret
-            .'&code='.urlencode($code);
+        $url = "https://{$this->oauthServer}/oauth/token/?".http_build_query([
+                'grant_type' => 'authorization_code',
+                'client_id' => $applicationId,
+                'client_secret' => $applicationSecret,
+                'code' => $code,
+            ]);
 
         $requestResult = $this->executeRequest($url);
         // handling bitrix24 api-level errors
@@ -943,8 +945,7 @@ class Bitrix24 implements iBitrix24
     public function call($methodName, array $additionalParameters = [])
     {
         try {
-            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName, $additionalParameters)
-                : $this->_call($methodName, $additionalParameters);
+            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName, $additionalParameters) : $this->_call($methodName, $additionalParameters);
 
             if (is_callable($this->_onCallApiMethod)) {
                 call_user_func($this->_onCallApiMethod, $this, $methodName);
@@ -959,8 +960,7 @@ class Bitrix24 implements iBitrix24
                 throw $e;
             }
 
-            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName, $additionalParameters)
-                : $this->_call($methodName, $additionalParameters);
+            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName, $additionalParameters) : $this->_call($methodName, $additionalParameters);
         }
 
         return $result;
