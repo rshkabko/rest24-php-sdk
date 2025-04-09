@@ -4,9 +4,11 @@ namespace Bitrix24;
 
 use Exception;
 use Bitrix24\Contracts\iBitrix24;
-use Bitrix24\Traits\Webhook;
-use Bitrix24\Traits\Batch;
-use Bitrix24\Traits\Proxy;
+use Bitrix24\Traits\{
+    Webhook,
+    Batch,
+    Proxy
+};
 use Bitrix24\Exceptions\{
     Bitrix24ApiException,
     Bitrix24BadJsonResponseException,
@@ -245,7 +247,6 @@ class Bitrix24 implements iBitrix24
     /**
      * Get new access token
      *
-     * @link https://dev.1c-bitrix.ru/learning/course/index.php?COURSE_ID=99&LESSON_ID=10263&LESSON_PATH=8771.5380.5379.10263
      * @return array
      *
      * @throws Exception
@@ -263,8 +264,6 @@ class Bitrix24 implements iBitrix24
             throw new Bitrix24Exception('application id not found, you must call setApplicationSecret method before');
         } elseif (null === $refreshToken) {
             throw new Bitrix24Exception('application id not found, you must call setRefreshToken method before');
-        } elseif (null === $redirectUri) {
-            throw new Bitrix24Exception('application redirect URI not found, you must call setRedirectUri method before');
         }
 
         $url = "https://{$this->oauthServer}/oauth/token/?".http_build_query([
@@ -273,6 +272,10 @@ class Bitrix24 implements iBitrix24
                 'client_secret' => $applicationSecret,
                 'refresh_token' => $refreshToken,
             ]);
+
+        if ($redirectUri) {
+            $url .= '&redirect_uri'.urlencode($redirectUri);
+        }
 
         $requestResult = $this->executeRequest($url);
 
@@ -732,36 +735,30 @@ class Bitrix24 implements iBitrix24
                 $methodName,
                 $this->getDomain()
             );
+            // logging error
+            $this->log->error($errorMsg, $this->getErrorContext());
+
             // throw specific API-level exceptions
             switch (strtoupper(trim($arRequestResult['error']))) {
                 case 'WRONG_CLIENT':
                 case 'ERROR_OAUTH':
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24WrongClientException($errorMsg);
                 case 'ERROR_METHOD_NOT_FOUND':
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24MethodNotFoundException($errorMsg);
                 case 'INVALID_TOKEN':
                 case 'INVALID_GRANT':
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24TokenIsInvalidException($errorMsg);
                 case 'EXPIRED_TOKEN':
-                    $this->log->notice($errorMsg, $this->getErrorContext());
                     throw new Bitrix24TokenIsExpiredException($errorMsg);
                 case 'PAYMENT_REQUIRED':
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24PaymentRequiredException($errorMsg);
                 case 'NO_AUTH_FOUND':
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24PortalRenamedException($errorMsg);
                 case 'INSUFFICIENT_SCOPE':
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24InsufficientScope($errorMsg);
                 case 'ACCESS_DENIED':
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24RestApiUnavailableOnFreeTariffException($errorMsg);
                 default:
-                    $this->log->error($errorMsg, $this->getErrorContext());
                     throw new Bitrix24ApiException($errorMsg);
             }
         }
@@ -771,8 +768,6 @@ class Bitrix24 implements iBitrix24
 
     /**
      * Authorize and get first access token
-     *
-     * @link https://dev.1c-bitrix.ru/learning/course/index.php?COURSE_ID=99&LESSON_ID=2486&LESSON_PATH=8771.5380.5379.2486
      *
      * @param $code
      *
@@ -902,7 +897,7 @@ class Bitrix24 implements iBitrix24
         }
 
         $url = "https://{$domain}/rest/scope.json?auth={$accessToken}";
-        if (true === $isFull) {
+        if ($isFull) {
             $url .= '&full=true';
         }
 
@@ -945,7 +940,8 @@ class Bitrix24 implements iBitrix24
     public function call($methodName, array $additionalParameters = [])
     {
         try {
-            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName, $additionalParameters) : $this->_call($methodName, $additionalParameters);
+            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName,
+                $additionalParameters) : $this->_call($methodName, $additionalParameters);
 
             if (is_callable($this->_onCallApiMethod)) {
                 call_user_func($this->_onCallApiMethod, $this, $methodName);
@@ -960,7 +956,8 @@ class Bitrix24 implements iBitrix24
                 throw $e;
             }
 
-            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName, $additionalParameters) : $this->_call($methodName, $additionalParameters);
+            $result = $this->getWebhookUsage() ? $this->_call_webhook($methodName,
+                $additionalParameters) : $this->_call($methodName, $additionalParameters);
         }
 
         return $result;
