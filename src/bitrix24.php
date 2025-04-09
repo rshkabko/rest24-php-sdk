@@ -463,10 +463,7 @@ class Bitrix24 implements iBitrix24
             $curlOptions[CURLOPT_PROXY] = $this->getProxy();
         }
 
-        /*if (strpos($url, 'bitrix24.ru') !== false) {
-            $curlOptions[CURLOPT_RESOLVE] = ["{$this->getDomain()}:443:178.132.201.53"];
-        }
-
+        /*
         if (strpos($url, 'bitrix24.kz') !== false) {
             $curlOptions[CURLOPT_RESOLVE] = ["{$this->getDomain()}:443:195.49.210.56"];
         }*/
@@ -797,6 +794,7 @@ class Bitrix24 implements iBitrix24
             ]);
 
         $requestResult = $this->executeRequest($url);
+
         // handling bitrix24 api-level errors
         $this->handleBitrix24APILevelErrors($requestResult, 'get first access token');
 
