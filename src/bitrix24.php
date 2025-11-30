@@ -554,7 +554,7 @@ class Bitrix24 implements iBitrix24
 
         // handling server-side API errors: empty response from bitrix24 portal
         if ($curlResult === '') {
-            $errorMsg = sprintf('empty response from portal [%s]', $this->getDomain());
+            $errorMsg = sprintf('bad gateway to portal [%s]', $this->getDomain(), $url);
             $this->log->error($errorMsg, $this->getErrorContext());
             throw new Bitrix24EmptyResponseException($errorMsg);
         }
