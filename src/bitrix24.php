@@ -554,7 +554,7 @@ class Bitrix24 implements iBitrix24
 
         // handling server-side API errors: empty response from bitrix24 portal
         if ($curlResult === '') {
-            $errorMsg = sprintf('bad gateway to portal [%s]', $this->getDomain(), $url);
+            $errorMsg = sprintf('empty response from portal [%s]', $this->getDomain());
             $this->log->error($errorMsg, $this->getErrorContext());
             throw new Bitrix24EmptyResponseException($errorMsg);
         }
@@ -564,14 +564,11 @@ class Bitrix24 implements iBitrix24
         unset($curlResult);
         $jsonErrorCode = json_last_error();
         if (null === $jsonResult && (JSON_ERROR_NONE !== $jsonErrorCode)) {
-            /**
-             * @todo add function json_last_error_msg()
-             */
-            $errorMsg = 'Fatal error in function json_decode.'.PHP_EOL.'Error code: '.$jsonErrorCode.PHP_EOL.'URL: '.$url;
+            $errorMsg = 'Fatal error in function json_decode.'.PHP_EOL.'Error code: '.$jsonErrorCode.PHP_EOL.'Error message: '.json_last_error_msg().PHP_EOL.'URL: '.$url;
             $this->log->error($errorMsg, $this->getErrorContext());
 
             // TODO: If more - use switch
-            if ($jsonErrorCode == 4) {
+            if ($jsonErrorCode === JSON_ERROR_SYNTAX) {
                 throw new Bitrix24BadJsonResponseException($errorMsg);
             }
 
@@ -703,7 +700,7 @@ class Bitrix24 implements iBitrix24
      */
     public function setRetriesToConnectTimeout(int $microseconds = 1000000): self
     {
-        $this->log->debug(sprintf('set retries to connect count %s', $microseconds));
+        $this->log->debug(sprintf('set retries to connect timeout %s', $microseconds));
         $this->retriesToConnectTimeout = $microseconds;
         return $this;
     }
@@ -862,9 +859,7 @@ class Bitrix24 implements iBitrix24
             $url .= '&full=true';
         }
 
-        if (null === $applicationScope) {
-            $scope = '&scope';
-        } elseif (count(array_unique($applicationScope)) > 0) {
+        if (count(array_unique($applicationScope)) > 0) {
             $scope = '&scope='.implode(',', array_map('urlencode', array_unique($applicationScope)));
         }
 
@@ -1029,13 +1024,10 @@ class Bitrix24 implements iBitrix24
                 // handling json_decode errors
                 $jsonErrorCode = json_last_error();
                 if (null === $arClearData && (JSON_ERROR_NONE !== $jsonErrorCode)) {
-                    /**
-                     * @todo add function json_last_error_msg()
-                     */
-                    $errorMsg = 'fatal error in function json_decode.'.PHP_EOL.'Error code: '.$jsonErrorCode.PHP_EOL;
+                    $errorMsg = 'fatal error in function json_decode.'.PHP_EOL.'Error code: '.$jsonErrorCode.PHP_EOL.'Error message: '.json_last_error_msg().PHP_EOL;
 
                     // TODO: If more - use switch
-                    if ($jsonErrorCode == 4) {
+                    if ($jsonErrorCode === JSON_ERROR_SYNTAX) {
                         throw new Bitrix24BadJsonResponseException($errorMsg);
                     }
 
