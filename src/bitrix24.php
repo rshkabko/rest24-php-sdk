@@ -274,7 +274,7 @@ class Bitrix24 implements iBitrix24
             ]);
 
         if ($redirectUri) {
-            $url .= '&redirect_uri'.urlencode($redirectUri);
+            $url .= '&redirect_uri='.urlencode($redirectUri);
         }
 
         $requestResult = $this->executeRequest($url);
@@ -445,7 +445,7 @@ class Bitrix24 implements iBitrix24
             CURLOPT_FOLLOWLOCATION => false,
             CURLOPT_RETURNTRANSFER => true,
             CURLINFO_HEADER_OUT => true,
-            CURLOPT_VERBOSE => true,
+            CURLOPT_VERBOSE => $this->isSaveRawResponse,
             CURLOPT_CONNECTTIMEOUT => 9,
             CURLOPT_TIMEOUT => 55,
             CURLOPT_USERAGENT => strtolower(__CLASS__.'-PHP-SDK/v'.self::VERSION),
