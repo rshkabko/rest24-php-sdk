@@ -2,7 +2,6 @@
 namespace Bitrix24\Event;
 use Bitrix24\Bitrix24Entity;
 use Bitrix24\Bitrix24Exception;
-use Bitrix24\Presets\Event\Event as EventType;
 
 /**
  * Class Event
@@ -10,18 +9,6 @@ use Bitrix24\Presets\Event\Event as EventType;
  */
 class Event extends Bitrix24Entity
 {
-	/**
-	 * check is event handler code valid
-	 * @param $eventHandlerName
-	 * @return bool
-	 */
-	protected function isEventHandlerCodeValid($eventHandlerName)
-	{
-        $reflection = new \ReflectionClass('\Bitrix24\Presets\Event\Event');
-        $result = $reflection->getConstant(strtoupper($eventHandlerName));
-        return isset($result);
-	}
-
 	/**
 	 * Get list of register events
 	 * @return array
@@ -59,10 +46,6 @@ class Event extends Bitrix24Entity
 	 */
 	public function bind($eventName, $handler, $authType = null)
 	{
-		if(!$this->isEventHandlerCodeValid($eventName))
-		{
-			throw new Bitrix24Exception('eventName is invalid');
-		}
 		if(is_null($handler))
 		{
 			throw new Bitrix24Exception('handler URL is null');
