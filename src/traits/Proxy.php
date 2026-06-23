@@ -53,6 +53,10 @@ trait Proxy
             return $this;
         }
 
+        if (!$this->getDomain()) {
+            return $this;
+        }
+
         // Mayby for domain?
         if (isset($zones[$this->getDomain()])) {
             $this->setProxy($zones[$this->getDomain()]);

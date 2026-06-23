@@ -49,7 +49,7 @@ interface iBitrix24
 
     public function hasBatchCalls(): bool;
 
-    public function processBatchCalls(int $halt = 0, int $delay = 0);
+    public function processBatchCalls(int $halt = 0, int $delay = 500000);
 
     public function rawBatch(array $batch, int $halt = 0);
 
@@ -58,7 +58,7 @@ interface iBitrix24
 
     public function getWebhookUsage(): bool;
 
-    public function setWebhookSecret(string $webhookSecret);
+    public function setWebhookSecret(string $webhookSecret): self;
 
     public function getWebhookSecret(): ?string;
 

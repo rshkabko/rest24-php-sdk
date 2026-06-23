@@ -46,13 +46,13 @@ trait Webhook
      *
      * @param  string  $webhook_secret
      *
-     * @return bool
+     * @return self
      */
-    public function setWebhookSecret($webhook_secret)
+    public function setWebhookSecret(string $webhook_secret): self
     {
         $this->webhook_secret = $webhook_secret;
 
-        return true;
+        return $this;
     }
 
     /**

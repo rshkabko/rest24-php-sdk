@@ -55,7 +55,7 @@ trait Batch
      *
      * @throws Exception
      */
-    public function processBatchCalls($halt = 0, $delay = 500000)
+    public function processBatchCalls(int $halt = 0, int $delay = 500000)
     {
         $this->log->info('Bitrix24PhpSdk.processBatchCalls.start', ['batch_query_delay' => $delay]);
         $batchQueryCounter = 0;
@@ -106,15 +106,15 @@ trait Batch
      * @return array|mixed
      * @throws Exception
      */
-    public function rawBatch(array $batch, $halt = 0)
+    public function rawBatch(array $batch, int $halt = 0)
     {
         if (count($batch) > $this->max_batch_calls) {
-            throw new Exception("Max batch call {$this->max_batch_calls}, you add ".count($batch));
+            throw new Bitrix24Exception("Max batch call {$this->max_batch_calls}, you add ".count($batch));
         }
 
         foreach ($batch as $cmd) {
             if (!isset($cmd['method'])) {
-                throw new Exception('Batch mast have method and params array!');
+                throw new Bitrix24Exception('Batch must have method and params array!');
             }
 
             $commands = $cmd['method'].'?'.http_build_query($cmd['params'] ?? []);
